@@ -1,0 +1,8 @@
+packages:
+  - 'demo-conductor'
+  - 'issuer'
+  - 'verifier'
+  - 'bbs-lib'
+  - 'status-list'
+  - 'ohttp'
+  - 'telemetry'
