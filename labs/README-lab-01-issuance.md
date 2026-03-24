@@ -43,6 +43,10 @@ Return the issuer public key in this shape:
 
 ### 2. Implement `POST /credential-offers`
 
+This route starts the issuance flow.
+
+In plain English: the client asks, "I want an `AgeCredential`." Your server replies, "Here is a one-time code. Use that code on `/token` next."
+
 This route should:
 
 - read `credentials` from the request body
@@ -53,7 +57,35 @@ This route should:
   - `credential_configuration_ids`
   - `grants["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"]`
 
+Example request:
+
+```json
+{ "credentials": ["AgeCredential"] }
+```
+
+Example response shape:
+
+```json
+{
+  "credential_offer": {
+    "credential_issuer": "http://localhost:3001",
+    "credential_configuration_ids": ["AgeCredential"],
+    "grants": {
+      "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+        "pre-authorized_code": "123e4567-e89b-12d3-a456-426614174000",
+        "user_pin_required": false
+      }
+    }
+  },
+  "expires_in": 600
+}
+```
+
 ### 3. Implement `POST /token`
+
+This route swaps the one-time code for a real access token.
+
+In plain English: if the client sends back the pre-authorized code from `/credential-offers`, give it a bearer token and a `c_nonce`.
 
 This route should:
 
@@ -72,7 +104,23 @@ Use:
 - token expiry: 10 minutes
 - `c_nonce` expiry: 5 minutes
 
+Example response shape:
+
+```json
+{
+  "access_token": "7a0e6f34-4e7e-4f30-8fd6-dc2e2e1d9380",
+  "token_type": "Bearer",
+  "expires_in": 600,
+  "c_nonce": "9d2d06a0-38df-4e55-8e36-a0d22ce5871b",
+  "c_nonce_expires_in": 300
+}
+```
+
 ### 4. Implement `POST /credential`
+
+This route is where the issuer finally creates the credential.
+
+In plain English: the client proves it has the access token and the latest `c_nonce`, then you mint an SD-JWT credential and return it.
 
 This route should:
 
